@@ -1,9 +1,0 @@
-{
-  "name": "mi-primera-app-bot",
-  "version": "1.0.0",
-  "description": "Bot de Telegram para recompensas",
-  "main": "api/webhook.js",
-  "dependencies": {
-    "axios": "^1.6.0"
-  }
-}
