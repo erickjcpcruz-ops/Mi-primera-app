@@ -1,7 +1,6 @@
 const axios = require('axios');
 
 module.exports = async (req, res) => {
-    // Verificar que sea una petición de Telegram
     if (req.method === 'POST') {
         const { message } = req.body;
 
@@ -10,7 +9,6 @@ module.exports = async (req, res) => {
             const userText = message.text;
             const apiToken = '8260512269:AAE27gGibMB5R6JnjZXwyeUd1psftqXNph4';
 
-            // Respuesta para el comando /start
             if (userText === '/start') {
                 const welcomeText = "👋 ¡Hola! Bienvenido a Mega Reward Bot.\n\nPresiona el botón de abajo para entrar a la app y empezar a ganar puntos viendo videos:";
                 
@@ -34,7 +32,6 @@ module.exports = async (req, res) => {
         }
         return res.status(200).send('OK');
     } else {
-        // Esto es lo que verás si abres el link en el navegador
         return res.status(200).send('Servidor del bot activo. Esperando mensajes de Telegram...');
     }
 };
