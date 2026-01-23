@@ -1,19 +1,1 @@
-async function mostrarAnuncio() {
-    // 1. Sumar puntos en la pantalla del celular
-    saldo += 50;
-    document.getElementById('balance').innerText = saldo;
 
-    // 2. ENVIAR A SUPABASE (Nombres exactos de tu tabla actual)
-    const { error } = await supabase
-        .from('profiles') // Asegúrate que sea minúscula
-        .upsert({ 
-            telegram_id: 1, // ID para tu prueba
-            total_points: saldo // Nombre de columna en tu captura
-        });
-
-    if (error) {
-        console.error("Error:", error.message);
-    } else {
-        alert("¡Puntos guardados en la nube!");
-    }
-}
