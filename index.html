@@ -1,44 +1,61 @@
-<div id="video-box" style="display:none; margin-bottom: 20px;">
-    <video id="reproductor" width="100%" controls disablePictureInPicture controlsList="nodownload">
-        <source src="TU_VIDEO_AQUI.mp4" type="video/mp4">
-    </video>
-</div>
-
-<script>
-  const video = document.getElementById('reproductor');
-  const videoBox = document.getElementById('video-box');
-
-  async function mostrarAnuncio() {
-    // Mostramos el video y ocultamos el botón para que no hagan trampa
-    videoBox.style.display = 'block';
-    video.play();
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body { background-color: #000; color: #fff; text-align: center; font-family: sans-serif; }
+        #balance { font-size: 50px; color: #00ff00; }
+        video { width: 100%; max-width: 400px; display: none; margin-top: 20px; }
+        button { padding: 15px 30px; font-size: 18px; border-radius: 10px; cursor: pointer; }
+    </style>
+</head>
+<body>
+    <h1>Tu Balance</h1>
+    <div id="balance">0</div>
     
-    // Deshabilitamos el botón de Telegram mientras ve el video
-    window.Telegram.WebApp.MainButton.hide();
-  }
+    <video id="videoAd" controls>
+        <source src="TU_LINK_DE_VIDEO.mp4" type="video/mp4">
+    </video>
 
-  // EVENTO CLAVE: Solo ocurre al terminar el video
-  video.onended = async function() {
-    const tg = window.Telegram.WebApp;
-    const user = tg.initDataUnsafe?.user;
-    const userId = user ? user.id : 999; // <--- AQUÍ SE USA SU ID REAL
+    <button id="btnVer" onclick="iniciarVideo()">🎥 VER VIDEO PARA GANAR</button>
 
-    saldo += 50;
-    document.getElementById('balance').innerText = saldo;
-    videoBox.style.display = 'none';
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-    // Guardamos en Supabase vinculando los puntos a SU ID
-    const { error } = await _supabase
-      .from('posts')
-      .upsert({ 
-        telegram_user_id: userId, 
-        total_points: saldo,
-        content: "Video completado por: " + (user ? user.first_name : "Humano")
-      }, { onConflict: 'telegram_user_id' });
+    <script>
+        const _supabase = supabase.createClient('https://ztoscymfplscnyybzzij.supabase.co', 'TU_CLAVE_REAL');
+        const video = document.getElementById('videoAd');
+        const btn = document.getElementById('btnVer');
+        let saldo = 0;
 
-    if (!error) {
-        tg.HapticFeedback.notificationOccurred('success'); // Vibra el cel
-        tg.MainButton.setText("¡+50 PUNTOS RECLAMADOS!").show();
-    }
-  };
-</script>
+        function iniciarVideo() {
+            video.style.display = 'block';
+            btn.style.display = 'none';
+            video.play();
+        }
+
+        // Solo se ejecuta cuando el video TERMINA
+        video.onended = async () => {
+            const tg = window.Telegram.WebApp;
+            const userId = tg.initDataUnsafe?.user?.id || 999; // Usamos su ID real
+
+            saldo += 50;
+            document.getElementById('balance').innerText = saldo;
+            video.style.display = 'none';
+            btn.style.display = 'block';
+
+            // Guardamos el ID y los puntos en Supabase
+            await _supabase.from('posts').upsert({ 
+                telegram_user_id: userId, 
+                total_points: saldo 
+            });
+
+            tg.HapticFeedback.notificationOccurred('success');
+        };
+
+        // ESTO QUITA LA PANTALLA BLANCA
+        window.Telegram.WebApp.ready();
+    </script>
+</body>
+</html>
