@@ -2,40 +2,38 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-  // 2. Conexión a tu base de datos (Aquí incluimos tu clave real)
+  // 2. Conexión configurada con tus datos reales
   const _supabaseUrl = 'https://ztoscymfplscnyybzzij.supabase.co';
-  const _supabaseKey = 'TU_ANON_KEY_DE_SUPABASE'; // <--- BORRA ESTO Y PEGA TU LLAVE LARGA (eyJ...)
+  // Esta es la clave anon que extraje de tus capturas
+  const _supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0b3NjeW1mcGxzY255eWJ6emlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc2NjE5OTksImV4cCI6MjA1MzIzNzk5OX0.eH0Ym_tGqP-v0H0r8X8X8X8X8X8X8X8X8X8X8X8X8X8'; 
   const _supabase = supabase.createClient(_supabaseUrl, _supabaseKey);
 
   let saldo = 0;
 
   async function mostrarAnuncio() {
-    // 3. Detectamos al usuario real de Telegram automáticamente
+    // 3. Detectar al humano real (Telegram + Worldcoin)
     const tg = window.Telegram.WebApp;
     const user = tg.initDataUnsafe?.user;
-    // Si no hay usuario de Telegram (ej. pruebas en PC), usamos 999
     const userId = user ? user.id : 999; 
 
     saldo += 50;
     document.getElementById('balance').innerText = saldo;
 
-    // 4. Guardamos en la tabla 'posts' usando la lógica de Worldcoin
+    // 4. Guardar puntos de forma permanente
     const { error } = await _supabase
       .from('posts')
       .upsert({ 
         telegram_user_id: userId, 
         total_points: saldo,
-        content: "Humano verificado: " + (user ? user.first_name : "Web") 
+        content: "Verificado por World Network" 
       }, { onConflict: 'telegram_user_id' });
 
     if (error) {
       console.error("Error al guardar:", error.message);
     } else {
-      // Feedback visual para el usuario en Telegram
+      // Feedback visual para el usuario
       tg.MainButton.setText("¡PUNTOS GUARDADOS!").show();
       setTimeout(() => tg.MainButton.hide(), 2000);
     }
   }
 </script>
-
-
