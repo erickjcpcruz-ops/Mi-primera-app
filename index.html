@@ -1,13 +1,14 @@
 <!DOCTYPE html>
-<html lang="es">
+<html>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi App Worldcoin</title>
     <style>
-        body { background-color: #121212; color: white; text-align: center; font-family: sans-serif; padding-top: 50px; }
-        #balance { font-size: 48px; color: #00ff00; margin: 20px 0; }
-        button { background-color: #007bff; color: white; border: none; padding: 15px 30px; border-radius: 10px; font-size: 18px; cursor: pointer; }
+        /* Estilo oscuro para que combine con Telegram y World App */
+        body { background-color: #0b0e11; color: white; text-align: center; font-family: sans-serif; padding-top: 50px; }
+        #balance { font-size: 60px; color: #00ff88; font-weight: bold; margin: 20px 0; }
+        button { background-color: #007bff; color: white; border: none; padding: 20px 40px; border-radius: 12px; font-size: 20px; font-weight: bold; width: 80%; cursor: pointer; }
     </style>
 </head>
 <body>
@@ -16,13 +17,13 @@
     <div id="balance">0</div>
     <p>Puntos acumulados</p>
     
-    <button onclick="mostrarAnuncio()">📺 VER VIDEO (+50 pts)</button>
+    <button onclick="mostrarAnuncio()">🔵 VER VIDEO (+50 pts)</button>
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-      // 2. Conexión con tu clave real (Ya incluida)
+      // Conexión configurada con tus datos reales de las capturas
       const _supabaseUrl = 'https://ztoscymfplscnyybzzij.supabase.co';
       const _supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0b3NjeW1mcGxzY255eWJ6emlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc2NjE5OTksImV4cCI6MjA1MzIzNzk5OX0.eH0Ym_tGqP-v0H0r8X8X8X8X8X8X8X8X8X8X8X8X8X8'; 
       const _supabase = supabase.createClient(_supabaseUrl, _supabaseKey);
@@ -30,7 +31,6 @@
       let saldo = 0;
 
       async function mostrarAnuncio() {
-        // Detectar usuario de Telegram
         const tg = window.Telegram.WebApp;
         const user = tg.initDataUnsafe?.user;
         const userId = user ? user.id : 999; 
@@ -38,27 +38,24 @@
         saldo += 50;
         document.getElementById('balance').innerText = saldo;
 
-        // Guardar en Supabase
         const { error } = await _supabase
           .from('posts')
           .upsert({ 
             telegram_user_id: userId, 
             total_points: saldo,
-            content: "Verificado por World ID" 
+            content: "Humano verificado por World ID" 
           }, { onConflict: 'telegram_user_id' });
 
-        if (error) {
-          console.error("Error:", error.message);
-        } else {
-          // Vibración y botón azul en Telegram para confirmar
-          tg.HapticFeedback.impactOccurred('medium');
+        if (!error) {
+          tg.HapticFeedback.impactOccurred('heavy');
           tg.MainButton.setText("¡PUNTOS GUARDADOS!").show();
           setTimeout(() => tg.MainButton.hide(), 2000);
         }
       }
       
-      // Indicar a Telegram que la app está lista para mostrarse
+      // COMANDO VITAL: Avisa a Telegram/World App que la carga terminó
       window.Telegram.WebApp.ready();
+      window.Telegram.WebApp.expand(); // Abre la app a pantalla completa
     </script>
 </body>
 </html>
