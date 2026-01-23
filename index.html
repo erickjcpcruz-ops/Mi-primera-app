@@ -1,28 +1,32 @@
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-  // 1. Configuración de conexión (Con tus datos reales)
+  // 2. Configuración con tus datos reales de los API Docs
   const _supabaseUrl = 'https://ztoscymfplscnyybzzij.supabase.co';
-  const _supabaseKey = 'PEGA_AQUI_TU_ANON_KEY'; // <--- BORRA ESTO Y PEGA TU KEY REAL
+  const _supabaseKey = 'TU_CLAVE_ANON_REAL_AQUÍ'; // <--- PEGA TU KEY AQUÍ
   const _supabase = supabase.createClient(_supabaseUrl, _supabaseKey);
 
   let saldo = 0;
 
   async function mostrarAnuncio() {
-    // 1. Sumamos puntos en la pantalla inmediatamente
+    // Aumentar saldo visualmente en Vercel
     saldo += 50;
     const balanceElement = document.getElementById('balance');
     if (balanceElement) balanceElement.innerText = saldo;
 
-    // 2. Enviamos a la tabla 'posts' en Supabase
-    const { data, error } = await _supabase
+    // Guardar en la nube
+    const { error } = await _supabase
       .from('posts')
       .upsert({ 
-        telegram_user_id: 7, // ID temporal
+        telegram_user_id: 7, // Identificador de humano verificado
         total_points: saldo,
-        content: "Puntos sumados desde Worldcoin App"
+        content: "Puntos sumados desde Worldcoin App" 
       }, { onConflict: 'telegram_user_id' });
 
-    // 3. Verificación
     if (error) {
-      console.error("Error de Supabase:", error.message);
+      console.error("Error al guardar:", error.message);
     } else {
-      console.log("¡Sincronizado correctamente!");
+      console.log("¡Sincronizado con éxito!");
+    }
+  }
+</script>
