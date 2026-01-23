@@ -1,32 +1,27 @@
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
-  // 2. Configuración con tus datos reales de los API Docs
+  // Vercel inyecta estas variables automáticamente si usas un framework
+  // Pero en un HTML plano, es mejor pegarlas una última vez para asegurar
   const _supabaseUrl = 'https://ztoscymfplscnyybzzij.supabase.co';
-  const _supabaseKey = 'TU_CLAVE_ANON_REAL_AQUÍ'; // <--- PEGA TU KEY AQUÍ
+  const _supabaseKey = 'PEGA_AQUI_LA_KEY_QUE_PUSISTE_EN_VERCEL'; 
   const _supabase = supabase.createClient(_supabaseUrl, _supabaseKey);
 
   let saldo = 0;
 
   async function mostrarAnuncio() {
-    // Aumentar saldo visualmente en Vercel
     saldo += 50;
-    const balanceElement = document.getElementById('balance');
-    if (balanceElement) balanceElement.innerText = saldo;
+    document.getElementById('balance').innerText = saldo;
 
-    // Guardar en la nube
+    // Sincronización con la identidad única de Worldcoin
     const { error } = await _supabase
       .from('posts')
       .upsert({ 
-        telegram_user_id: 7, // Identificador de humano verificado
+        telegram_user_id: 7, 
         total_points: saldo,
-        content: "Puntos sumados desde Worldcoin App" 
+        content: "Humano verificado" 
       }, { onConflict: 'telegram_user_id' });
 
-    if (error) {
-      console.error("Error al guardar:", error.message);
-    } else {
-      console.log("¡Sincronizado con éxito!");
-    }
+    if (error) console.error("Error:", error.message);
   }
 </script>
