@@ -1,27 +1,39 @@
-
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
 <script>
-  // Vercel inyecta estas variables automáticamente si usas un framework
-  // Pero en un HTML plano, es mejor pegarlas una última vez para asegurar
+  // 2. Conexión a tu base de datos
   const _supabaseUrl = 'https://ztoscymfplscnyybzzij.supabase.co';
-  const _supabaseKey = 'PEGA_AQUI_LA_KEY_QUE_PUSISTE_EN_VERCEL'; 
+  const _supabaseKey = 'PEGA_AQUÍ_TU_CLAVE_ANON_REAL'; // Usa la que tienes en API Docs
   const _supabase = supabase.createClient(_supabaseUrl, _supabaseKey);
 
   let saldo = 0;
 
   async function mostrarAnuncio() {
+    // 3. Detectamos al usuario real de Telegram automáticamente
+    const tg = window.Telegram.WebApp;
+    const user = tg.initDataUnsafe?.user;
+    const userId = user ? user.id : 999; // Usa el ID real o 999 para pruebas
+
     saldo += 50;
     document.getElementById('balance').innerText = saldo;
 
-    // Sincronización con la identidad única de Worldcoin
+    // 4. Guardamos en la tabla 'posts' de Supabase
     const { error } = await _supabase
       .from('posts')
       .upsert({ 
-        telegram_user_id: 7, 
+        telegram_user_id: userId, 
         total_points: saldo,
-        content: "Humano verificado" 
+        content: "Humano verificado: " + (user ? user.first_name : "Web") 
       }, { onConflict: 'telegram_user_id' });
 
-    if (error) console.error("Error:", error.message);
+    if (error) {
+      console.error("Error al guardar:", error.message);
+    } else {
+      // Feedback visual en Telegram
+      tg.MainButton.setText("¡PUNTOS GUARDADOS!").show();
+      setTimeout(() => tg.MainButton.hide(), 2000);
+    }
   }
 </script>
+
