@@ -1,52 +1,19 @@
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mega Reward Bot</title>
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-    <style>
-        body { background: #0f0f0f; color: white; font-family: sans-serif; text-align: center; padding-top: 50px; }
-        .card { background: #1e1e1e; padding: 20px; border-radius: 20px; margin: 0 20px; }
-        .puntos { font-size: 40px; color: #00ff88; margin: 10px 0; }
-        .btn-main { background: linear-gradient(45deg, #007bff, #00c6ff); border: none; color: white; padding: 15px 30px; border-radius: 50px; font-size: 18px; cursor: pointer; width: 100%; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h3>Tu Balance</h3>
-        <div class="puntos" id="balance">0</div>
-        <p>Puntos acumulados</p>
-        <button class="btn-main" onclick="mostrarAnuncio()">📺 VER VIDEO (+50 pts)</button>
-    </div>
+async function mostrarAnuncio() {
+    // 1. Sumar puntos en la pantalla del celular
+    saldo += 50;
+    document.getElementById('balance').innerText = saldo;
 
-    <script>
-        // CONFIGURACIÓN DE SUPABASE
-        const supabaseUrl = 'https://ztoscymfplscnyybzzij.supabase.co'; // Ya la saqué de tu captura
-        const supabaseKey = 'TU_API_KEY_AQUÍ'; // Pégala aquí (la que dice 'anon' o 'public')
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+    // 2. ENVIAR A SUPABASE (Nombres exactos de tu tabla actual)
+    const { error } = await supabase
+        .from('profiles') // Asegúrate que sea minúscula
+        .upsert({ 
+            telegram_id: 1, // ID para tu prueba
+            total_points: saldo // Nombre de columna en tu captura
+        });
 
-        let saldo = parseInt(localStorage.getItem('puntos')) || 0;
-        document.getElementById('balance').innerText = saldo;
-
-        async function mostrarAnuncio() {
-            // Simulamos el video. Al terminar:
-            saldo += 50;
-            document.getElementById('balance').innerText = saldo;
-            localStorage.setItem('puntos', saldo);
-
-            // GUARDAR EN TU TABLA "profiles" (la que tiene telegram_id)
-            const { error } = await supabase
-                .from('profiles')
-                .upsert({ 
-                    telegram_id: 1, // Cambia esto por tu ID real después
-                    total_points: saldo 
-                });
-
-            if (error) console.log("Error:", error.message);
-            else alert("¡Puntos guardados en Supabase!");
-        }
-    </script>
-</body>
-</html>
-
+    if (error) {
+        console.error("Error:", error.message);
+    } else {
+        alert("¡Puntos guardados en la nube!");
+    }
+}
