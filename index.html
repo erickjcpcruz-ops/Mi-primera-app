@@ -1,44 +1,28 @@
+// 1. Configuración de conexión (Asegúrate de tener tus llaves arriba)
+let saldo = parseInt(localStorage.getItem('puntos')) || 0;
+document.getElementById('balance').innerText = saldo;
 
-<!DOCTYPE html>
-<html lang="es">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mega Reward Bot</title>
-    <script src="https://aniads.com/sdk.js"></script>
-    <style>
-        body { background: #0f0f0f; color: white; font-family: 'Segoe UI', sans-serif; text-align: center; padding: 20px; }
-        .card { background: #1e1e1e; border-radius: 20px; padding: 20px; margin-top: 20px; border: 1px solid #333; }
-        .btn-main { background: linear-gradient(45deg, #0088cc, #00aaff); border: none; padding: 15px 30px; color: white; border-radius: 50px; font-weight: bold; font-size: 18px; cursor: pointer; width: 100%; }
-        .puntos { font-size: 40px; color: #00ff88; margin: 10px 0; }
-    </style>
-</head>
-<body>
-    <div class="card">
-        <h3>Tu Balance</h3>
-        <div class="puntos" id="balance">0</div>
-        <p>Puntos acumulados</p>
-    </div>
+async function mostrarAnuncio() {
+    AniAds.showRewardedVideo({
+        onComplete: async () => {
+            // Sumar puntos localmente
+            saldo += 50;
+            localStorage.setItem('puntos', saldo);
+            document.getElementById('balance').innerText = saldo;
 
-    <div style="margin-top: 30px;">
-        <button class="btn-main" onclick="mostrarAnuncio()">📺 VER VIDEO (+50 pts)</button>
-    </div>
+            // ENVIAR A SUPABASE (El puente que faltaba)
+            const { data, error } = await supabase
+                .from('Profiles') // Tu tabla con P mayúscula
+                .upsert({ 
+                    id: 1, // ID temporal para pruebas
+                    points999: saldo // Tu columna points999
+                });
 
-    <script>
-        let saldo = localStorage.getItem('puntos') || 0;
-        document.getElementById('balance').innerText = saldo;
-
-        function mostrarAnuncio() {
-            // Llamada oficial a Ani Ads
-            AniAds.showRewardedVideo({
-                onComplete: () => {
-                    saldo = parseInt(saldo) + 50;
-                    localStorage.setItem('puntos', saldo);
-                    document.getElementById('balance').innerText = saldo;
-                    alert("¡Felicidades! Ganaste 50 puntos.");
-                }
-            });
+            if (error) {
+                console.error("Error al guardar:", error);
+            } else {
+                alert("¡Puntos guardados en la nube!");
+            }
         }
-    </script>
-</body>
-</html>
+    });
+}
