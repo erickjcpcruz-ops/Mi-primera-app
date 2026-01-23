@@ -1,1 +1,26 @@
+// Asegúrate de que estas constantes estén bien configuradas arriba
+const _supabase = supabase.createClient('TU_URL', 'TU_KEY');
+
+async function mostrarAnuncio() {
+  // 1. Sumamos puntos en la pantalla
+  saldo += 50;
+  document.getElementById('balance').innerText = saldo;
+
+  // 2. Enviamos a Supabase
+  const { data, error } = await _supabase
+    .from('posts')
+    .upsert({ 
+      telegram_user_id: 7, // Reemplaza por el ID real del usuario más adelante
+      total_points: saldo,
+      content: "Puntos sumados desde el botón"
+    }, { onConflict: 'telegram_user_id' });
+
+  // 3. Verificamos si funcionó
+  if (error) {
+    console.error("Error al guardar:", error.message);
+  } else {
+    console.log("¡Datos sincronizados con éxito!");
+  }
+}
+
 
