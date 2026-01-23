@@ -2,9 +2,9 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
 <script>
-  // 2. Conexión a tu base de datos
+  // 2. Conexión a tu base de datos (Aquí incluimos tu clave real)
   const _supabaseUrl = 'https://ztoscymfplscnyybzzij.supabase.co';
-  const _supabaseKey = 'PEGA_AQUÍ_TU_CLAVE_ANON_REAL'; // Usa la que tienes en API Docs
+  const _supabaseKey = 'TU_ANON_KEY_DE_SUPABASE'; // <--- BORRA ESTO Y PEGA TU LLAVE LARGA (eyJ...)
   const _supabase = supabase.createClient(_supabaseUrl, _supabaseKey);
 
   let saldo = 0;
@@ -13,12 +13,13 @@
     // 3. Detectamos al usuario real de Telegram automáticamente
     const tg = window.Telegram.WebApp;
     const user = tg.initDataUnsafe?.user;
-    const userId = user ? user.id : 999; // Usa el ID real o 999 para pruebas
+    // Si no hay usuario de Telegram (ej. pruebas en PC), usamos 999
+    const userId = user ? user.id : 999; 
 
     saldo += 50;
     document.getElementById('balance').innerText = saldo;
 
-    // 4. Guardamos en la tabla 'posts' de Supabase
+    // 4. Guardamos en la tabla 'posts' usando la lógica de Worldcoin
     const { error } = await _supabase
       .from('posts')
       .upsert({ 
@@ -30,10 +31,11 @@
     if (error) {
       console.error("Error al guardar:", error.message);
     } else {
-      // Feedback visual en Telegram
+      // Feedback visual para el usuario en Telegram
       tg.MainButton.setText("¡PUNTOS GUARDADOS!").show();
       setTimeout(() => tg.MainButton.hide(), 2000);
     }
   }
 </script>
+
 
