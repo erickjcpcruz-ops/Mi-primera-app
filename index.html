@@ -1,61 +1,44 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi App Worldcoin</title>
-    <style>
-        /* Estilo oscuro para que combine con Telegram y World App */
-        body { background-color: #0b0e11; color: white; text-align: center; font-family: sans-serif; padding-top: 50px; }
-        #balance { font-size: 60px; color: #00ff88; font-weight: bold; margin: 20px 0; }
-        button { background-color: #007bff; color: white; border: none; padding: 20px 40px; border-radius: 12px; font-size: 20px; font-weight: bold; width: 80%; cursor: pointer; }
-    </style>
-</head>
-<body>
+<div id="video-box" style="display:none; margin-bottom: 20px;">
+    <video id="reproductor" width="100%" controls disablePictureInPicture controlsList="nodownload">
+        <source src="TU_VIDEO_AQUI.mp4" type="video/mp4">
+    </video>
+</div>
 
-    <h1>Tu Balance</h1>
-    <div id="balance">0</div>
-    <p>Puntos acumulados</p>
+<script>
+  const video = document.getElementById('reproductor');
+  const videoBox = document.getElementById('video-box');
+
+  async function mostrarAnuncio() {
+    // Mostramos el video y ocultamos el botón para que no hagan trampa
+    videoBox.style.display = 'block';
+    video.play();
     
-    <button onclick="mostrarAnuncio()">🔵 VER VIDEO (+50 pts)</button>
+    // Deshabilitamos el botón de Telegram mientras ve el video
+    window.Telegram.WebApp.MainButton.hide();
+  }
 
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  // EVENTO CLAVE: Solo ocurre al terminar el video
+  video.onended = async function() {
+    const tg = window.Telegram.WebApp;
+    const user = tg.initDataUnsafe?.user;
+    const userId = user ? user.id : 999; // <--- AQUÍ SE USA SU ID REAL
 
-    <script>
-      // Conexión configurada con tus datos reales de las capturas
-      const _supabaseUrl = 'https://ztoscymfplscnyybzzij.supabase.co';
-      const _supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0b3NjeW1mcGxzY255eWJ6emlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc2NjE5OTksImV4cCI6MjA1MzIzNzk5OX0.eH0Ym_tGqP-v0H0r8X8X8X8X8X8X8X8X8X8X8X8X8X8'; 
-      const _supabase = supabase.createClient(_supabaseUrl, _supabaseKey);
+    saldo += 50;
+    document.getElementById('balance').innerText = saldo;
+    videoBox.style.display = 'none';
 
-      let saldo = 0;
+    // Guardamos en Supabase vinculando los puntos a SU ID
+    const { error } = await _supabase
+      .from('posts')
+      .upsert({ 
+        telegram_user_id: userId, 
+        total_points: saldo,
+        content: "Video completado por: " + (user ? user.first_name : "Humano")
+      }, { onConflict: 'telegram_user_id' });
 
-      async function mostrarAnuncio() {
-        const tg = window.Telegram.WebApp;
-        const user = tg.initDataUnsafe?.user;
-        const userId = user ? user.id : 999; 
-
-        saldo += 50;
-        document.getElementById('balance').innerText = saldo;
-
-        const { error } = await _supabase
-          .from('posts')
-          .upsert({ 
-            telegram_user_id: userId, 
-            total_points: saldo,
-            content: "Humano verificado por World ID" 
-          }, { onConflict: 'telegram_user_id' });
-
-        if (!error) {
-          tg.HapticFeedback.impactOccurred('heavy');
-          tg.MainButton.setText("¡PUNTOS GUARDADOS!").show();
-          setTimeout(() => tg.MainButton.hide(), 2000);
-        }
-      }
-      
-      // COMANDO VITAL: Avisa a Telegram/World App que la carga terminó
-      window.Telegram.WebApp.ready();
-      window.Telegram.WebApp.expand(); // Abre la app a pantalla completa
-    </script>
-</body>
-</html>
+    if (!error) {
+        tg.HapticFeedback.notificationOccurred('success'); // Vibra el cel
+        tg.MainButton.setText("¡+50 PUNTOS RECLAMADOS!").show();
+    }
+  };
+</script>
