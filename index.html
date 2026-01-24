@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -9,33 +10,29 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
         :root { --bg: #000; --white: #fff; --blue: #007aff; }
-        body { background: var(--bg); color: var(--white); font-family: -apple-system, sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center; }
-        .card { width: 90%; max-width: 360px; padding: 30px; border-radius: 28px; background: #1c1c1e; border: 1px solid #2c2c2e; }
-        .btn { background: var(--white); color: #000; border: none; padding: 18px; border-radius: 50px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 20px; font-size: 16px; }
-        #balance { font-size: 70px; font-weight: 800; margin: 10px 0; }
-        #cooldown { color: #ff453a; font-size: 14px; margin-top: 20px; display: none; font-weight: 600; }
-        video { width: 100%; border-radius: 15px; display: none; margin-top: 15px; }
+        body { background: var(--bg); color: var(--white); font-family: sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center; }
+        .card { width: 90%; max-width: 360px; padding: 30px; border-radius: 25px; background: #111; border: 1px solid #222; }
+        .btn { background: var(--white); color: #000; border: none; padding: 18px; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 20px; font-size: 16px; }
+        #balance { font-size: 70px; font-weight: bold; margin: 10px 0; }
+        #cooldown { color: #ff453a; font-size: 14px; margin-top: 20px; display: none; font-weight: bold; }
+        video { width: 100%; border-radius: 20px; display: none; margin-top: 15px; border: 1px solid #333; }
     </style>
 </head>
 <body>
 
     <div id="login-view" class="card">
-        <div style="font-size: 50px; margin-bottom: 10px;">🌍</div>
-        <h2>Recompensa Diaria</h2>
-        <p style="color: #8e8e93;">Verifícate con World ID para ganar 50 puntos cada 24 horas.</p>
-        <button class="btn" onclick="conectar()">Verificar Humanidad</button>
+        <div style="font-size: 50px; margin-bottom: 10px;">🌐</div>
+        <h2>Misión Diaria</h2>
+        <p style="color: #888;">Verifícate para ganar 50 puntos hoy.</p>
+        <button id="btnConectar" class="btn" onclick="conectar()">Verificar Humanidad</button>
     </div>
 
     <div id="main-view" class="card" style="display:none;">
         <div id="balance">0</div>
-        <p style="color: #30d158; font-weight: 700; font-size: 12px;">PUNTOS TOTALES</p>
-        
-        <video id="videoAd" playsinline>
-            <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-        </video>
-
-        <button id="btnVer" class="btn" style="background: var(--blue); color: white;" onclick="playVideo()">📺 VER ANUNCIO (+50)</button>
-        <div id="cooldown">Misión diaria completada.<br>Próximo video en: <span id="timer">--:--:--</span></div>
+        <p style="color: #00ff88; font-weight: bold;">PUNTOS ACUMULADOS</p>
+        <video id="videoAd" playsinline><source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4"></video>
+        <button id="btnVer" class="btn" style="background: var(--blue); color: white;" onclick="playVideo()">📺 VER VIDEO (+50)</button>
+        <div id="cooldown">Vuelve en: <br><span id="timer">--:--:--</span></div>
     </div>
 
     <script>
@@ -52,30 +49,30 @@
                         userHash = res.nullifier_hash;
                         document.getElementById('login-view').style.display = 'none';
                         document.getElementById('main-view').style.display = 'block';
-                        cargarDatos();
+                        chequearEstado();
                     }
                 });
-            } catch (e) { alert("Error: Abre la World App antes de presionar el botón."); }
+            } catch (e) {
+                alert("Error de conexión. Asegúrate de estar dentro de World App.");
+            }
         }
 
-        async function cargarDatos() {
+        async function chequearEstado() {
             const { data } = await _supabase.from('posts').select('*').eq('telegram_user_id', userHash).single();
             if (data) {
                 document.getElementById('balance').innerText = data.total_points;
                 const ultimaVez = new Date(data.updated_at || data.created_at).getTime();
                 const espera = 24 * 60 * 60 * 1000;
-                if (Date.now() - ultimaVez < espera) {
-                    bloquearBoton(ultimaVez + espera);
-                }
+                if (Date.now() - ultimaVez < espera) { iniciarContador(ultimaVez + espera); }
             }
         }
 
-        function bloquearBoton(tiempoFin) {
+        function iniciarContador(fin) {
             const btn = document.getElementById('btnVer');
             const box = document.getElementById('cooldown');
             btn.style.display = "none"; box.style.display = "block";
             const itv = setInterval(() => {
-                const falta = tiempoFin - Date.now();
+                const falta = fin - Date.now();
                 if (falta <= 0) { clearInterval(itv); btn.style.display = "block"; box.style.display = "none"; }
                 else {
                     const h = Math.floor(falta / 3600000);
@@ -97,11 +94,12 @@
                     total_points: actual + 50,
                     updated_at: new Date().toISOString() 
                 }, { onConflict: 'telegram_user_id' });
-                location.reload(); 
+                location.reload();
             };
         }
         window.Telegram.WebApp.ready();
     </script>
 </body>
 </html>
+
 
