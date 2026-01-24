@@ -8,76 +8,91 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <style>
-        :root { --bg: #000; --white: #fff; --blue: #007aff; }
-        body { background: var(--bg); color: var(--white); font-family: sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center; overflow: hidden; }
-        .card { width: 90%; max-width: 380px; padding: 25px; border-radius: 25px; background: #111; border: 1px solid #222; }
-        .btn { background: var(--white); color: #000; border: none; padding: 18px; border-radius: 50px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 20px; font-size: 16px; }
-        .btn:disabled { background: #222; color: #555; }
-        #balance { font-size: 70px; font-weight: bold; margin: 10px 0; }
-        #cooldown { color: #ff453a; font-size: 14px; margin-top: 15px; display: none; font-weight: bold; }
-        video { width: 100%; border-radius: 20px; display: none; margin-top: 15px; border: 1px solid #333; }
+        :root { --bg: #000; --white: #fff; --blue: #007aff; --gray: #8e8e93; }
+        body { background: var(--bg); color: var(--white); font-family: -apple-system, sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center; }
+        .card { width: 90%; max-width: 380px; padding: 30px; border-radius: 28px; background: #1c1c1e; border: 1px solid #2c2c2e; box-shadow: 0 20px 40px rgba(0,0,0,0.4); }
+        .btn { background: var(--white); color: #000; border: none; padding: 18px; border-radius: 50px; font-weight: 700; width: 100%; cursor: pointer; margin-top: 20px; font-size: 17px; }
+        .btn:active { transform: scale(0.96); }
+        #balance { font-size: 75px; font-weight: 800; margin: 15px 0; letter-spacing: -2px; }
+        #cooldown { color: #ff453a; font-size: 14px; margin-top: 20px; display: none; font-weight: 600; line-height: 1.5; }
+        video { width: 100%; border-radius: 18px; display: none; margin-top: 20px; border: 1px solid #3a3a3c; }
     </style>
 </head>
 <body>
 
     <div id="login-view" class="card">
-        <div style="font-size: 50px; margin-bottom: 10px;">🌐</div>
-        <h2>Misión Diaria</h2>
-        <p style="color: #888;">Verifícate para ganar 50 puntos hoy.</p>
-        <button id="btnConectar" class="btn" onclick="conectar()">Verificar Humanidad</button>
+        <div style="font-size: 55px; margin-bottom: 15px;">🌍</div>
+        <h2 style="margin:0;">World Points</h2>
+        <p style="color: var(--gray); margin-top: 10px;">Verifica tu identidad para reclamar 50 puntos diarios.</p>
+        <button id="btnInit" class="btn" onclick="conectar()">Verificar Humanidad</button>
     </div>
 
     <div id="main-view" class="card" style="display:none;">
         <div id="balance">0</div>
-        <p style="color: #00ff88; font-weight: bold;">PUNTOS WLD</p>
-        <video id="videoAd" playsinline><source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4"></video>
+        <p style="color: #32d74b; font-weight: 700; text-transform: uppercase; font-size: 12px; letter-spacing: 1px;">Puntos Acumulados</p>
+        
+        <video id="videoAd" playsinline>
+            <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+        </video>
+
         <button id="btnVer" class="btn" style="background: var(--blue); color: white;" onclick="playVideo()">📺 VER VIDEO (+50)</button>
-        <div id="cooldown">Vuelve en: <br><span id="timer">--:--:--</span></div>
+        <div id="cooldown">Misión completada.<br>Próximo video en: <span id="timer">--:--:--</span></div>
     </div>
 
     <script>
+        // Credenciales de Supabase
         const _supabase = supabase.createClient('https://ztoscymfplscnyybzzij.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0b3NjeW1mfGxzY255eWJ6emlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc2NjE5OTksImV4cCI6MjA1MzIzNzk5OX0.eH0Ym_tGqP-v0H0r8X8X8X8X8X8X8X8X8X8X8X8X8X8');
         let userHash = "";
 
         async function conectar() {
             try {
+                // Inicia World ID
                 await IDKit.open({
                     app_id: "app_a91da31176bbbd6366544e13979839",
                     action: "login-para-puntos",
-                    verification_level: "device",
+                    verification_level: "device", 
                     onSuccess: (res) => {
                         userHash = res.nullifier_hash;
                         document.getElementById('login-view').style.display = 'none';
                         document.getElementById('main-view').style.display = 'block';
-                        chequearEstado();
+                        chequearDatos();
                     }
                 });
             } catch (e) {
-                alert("Error de conexión. Asegúrate de estar dentro de World App.");
+                alert("Error: Abre la World App antes de presionar el botón.");
             }
         }
 
-        async function chequearEstado() {
+        async function chequearDatos() {
             const { data } = await _supabase.from('posts').select('*').eq('telegram_user_id', userHash).single();
+            
             if (data) {
                 document.getElementById('balance').innerText = data.total_points;
                 const ultimaVez = new Date(data.updated_at || data.created_at).getTime();
-                const espera = 24 * 60 * 60 * 1000;
-                if (Date.now() - ultimaVez < espera) { iniciarContador(ultimaVez + espera); }
+                const veinticuatroH = 24 * 60 * 60 * 1000;
+
+                if (Date.now() - ultimaVez < veinticuatroH) {
+                    bloquearBoton(ultimaVez + veinticuatroH);
+                }
             }
         }
 
-        function iniciarContador(fin) {
+        function bloquearBoton(tiempoFin) {
             const btn = document.getElementById('btnVer');
             const box = document.getElementById('cooldown');
-            btn.style.display = "none"; box.style.display = "block";
-            const itv = setInterval(() => {
-                const falta = fin - Date.now();
-                if (falta <= 0) { clearInterval(itv); btn.style.display = "block"; box.style.display = "none"; }
-                else {
-                    const h = Math.floor(falta / 3600000);
-                    const m = Math.floor((falta % 3600000) / 60000);
-                    const s = Math.floor((falta % 60000) / 1000);
+            btn.style.display = "none";
+            box.style.display = "block";
+
+            const timer = setInterval(() => {
+                const resto = tiempoFin - Date.now();
+                if (resto <= 0) {
+                    clearInterval(timer);
+                    btn.style.display = "block";
+                    box.style.display = "none";
+                } else {
+                    const h = Math.floor(resto / 3600000);
+                    const m = Math.floor((resto % 3600000) / 60000);
+                    const s = Math.floor((resto % 60000) / 1000);
                     document.getElementById('timer').innerText = `${h}h ${m}m ${s}s`;
                 }
             }, 1000);
@@ -85,21 +100,23 @@
 
         function playVideo() {
             const v = document.getElementById('videoAd');
-            v.style.display = "block"; document.getElementById('btnVer').style.display = "none";
+            v.style.display = "block";
+            document.getElementById('btnVer').style.display = "none";
             v.play();
+            
             v.onended = async () => {
                 const actual = parseInt(document.getElementById('balance').innerText);
+                // Upsert con marca de tiempo para bloquear 24h
                 await _supabase.from('posts').upsert({ 
                     telegram_user_id: userHash, 
                     total_points: actual + 50,
                     updated_at: new Date().toISOString() 
-                });
-                location.reload();
+                }, { onConflict: 'telegram_user_id' });
+                
+                location.reload(); 
             };
         }
         window.Telegram.WebApp.ready();
     </script>
 </body>
 </html>
-
-
