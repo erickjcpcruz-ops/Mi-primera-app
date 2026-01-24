@@ -7,14 +7,13 @@
     <script src="https://unpkg.com/@worldcoin/idkit-js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
     <style>
         :root { --bg: #000; --white: #fff; --green: #00ff88; --gray: #888; }
-        body { background: var(--bg); color: var(--white); font-family: -apple-system, sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center; }
+        body { background: var(--bg); color: var(--white); font-family: -apple-system, sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center; overflow: hidden; }
         .card { width: 90%; max-width: 380px; padding: 30px; border-radius: 30px; background: #111; border: 1px solid #222; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
         .logo-circle { width: 60px; height: 60px; margin: 0 auto 20px; background: linear-gradient(135deg, #007aff, #00ff88); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
         .btn-main { background: var(--white); color: var(--bg); border: none; padding: 18px; border-radius: 100px; font-size: 18px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 25px; transition: 0.2s; }
-        .btn-main:active { transform: scale(0.98); }
+        .btn-main:active { transform: scale(0.96); }
         #balance { font-size: 75px; font-weight: bold; margin: 5px 0; }
         #video-container { width: 100%; border-radius: 20px; overflow: hidden; display: none; margin: 20px 0; border: 1px solid #333; }
         video { width: 100%; display: block; }
@@ -26,12 +25,10 @@
         <div class="logo-circle">🌐</div>
         <h2 style="margin:0;">Iniciar sesión</h2>
         <p style="color: var(--gray); font-size: 15px; margin-top: 10px;">Firma para confirmar tu identidad y autenticarte en la App.</p>
-        
         <div style="text-align: left; margin-top: 25px; background: #1a1a1a; padding: 15px; border-radius: 15px;">
             <div style="font-size: 14px; margin-bottom: 8px;">✅ <b>Billetera</b></div>
             <div style="font-size: 14px;">✅ <b>Nivel de verificación</b></div>
         </div>
-
         <button class="btn-main" onclick="conectarWorldID()">Iniciar sesión</button>
     </div>
 
@@ -39,13 +36,7 @@
         <p style="color: var(--gray); font-size: 12px; letter-spacing: 2px; font-weight: bold;">SALDO VERIFICADO</p>
         <div id="balance">0</div>
         <p style="color: var(--green); font-weight: bold; margin-bottom: 25px;">Puntos WLD</p>
-        
-        <div id="video-container">
-            <video id="videoAd" playsinline>
-                <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-            </video>
-        </div>
-
+        <div id="video-container"><video id="videoAd" playsinline><source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4"></video></div>
         <button id="btnVer" class="btn-main" style="background:#007aff; color:white;" onclick="verVideo()">📺 VER VIDEO (+50)</button>
     </div>
 
@@ -56,12 +47,43 @@
 
         async function conectarWorldID() {
             try {
-                // Lanza el proceso de verificación oficial
                 await IDKit.open({
-                    app_id: "app_a91da31176bbbd6366544e13979839", 
-                    action: "login-para-puntos", 
-                    verification_level: "device", // Nivel configurado en tu portal
+                    app_id: "app_a91da31176bbbd6366544e13979839", // Tu ID
+                    action: "login-para-puntos", // Tu acción
+                    verification_level: "device", // Nivel device según tu captura
                     onSuccess: (res) => {
-                        userHash = res.nullifier_hash; // ID único del humano
+                        userHash = res.nullifier_hash; // ID anónimo seguro
                         document.getElementById('login-view').style.display = 'none';
                         document.getElementById('main-view').style.display = 'block';
+                        cargarSaldo();
+                    }
+                });
+            } catch (e) { console.error(e); }
+        }
+
+        async function cargarSaldo() {
+            const { data } = await _supabase.from('posts').select('total_points').eq('telegram_user_id', userHash).single();
+            if (data) { saldo = data.total_points; document.getElementById('balance').innerText = saldo; }
+        }
+
+        function verVideo() {
+            document.getElementById('video-container').style.display = 'block';
+            document.getElementById('btnVer').style.display = 'none';
+            document.getElementById('videoAd').play();
+        }
+
+        document.getElementById('videoAd').onended = async () => {
+            saldo += 50;
+            document.getElementById('balance').innerText = saldo;
+            document.getElementById('video-container').style.display = 'none';
+            document.getElementById('btnVer').style.display = 'block';
+            await _supabase.from('posts').upsert({ telegram_user_id: userHash, total_points: saldo }, { onConflict: 'telegram_user_id' });
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
+        };
+
+        window.Telegram.WebApp.ready();
+    </script>
+</body>
+</html>
+
+
