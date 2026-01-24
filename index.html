@@ -1,3 +1,140 @@
-<video id="videoAd" controls disablePictureInPicture controlsList="nodownload">
-    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
-</video>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>World Earnings</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        :root {
+            --bg-color: #000000;
+            --card-bg: #111111;
+            --accent-color: #00ff88; /* Verde Worldcoin */
+            --text-main: #ffffff;
+            --text-dim: #888888;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 400px;
+            text-align: center;
+        }
+
+        .header-label {
+            color: var(--text-dim);
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        #balance {
+            font-size: 82px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin: 0;
+            line-height: 1;
+            text-shadow: 0 0 20px rgba(255, 255, 255, 0.1);
+        }
+
+        .currency {
+            color: var(--accent-color);
+            font-size: 24px;
+            margin-bottom: 30px;
+        }
+
+        #video-container {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: var(--card-bg);
+            border-radius: 24px;
+            overflow: hidden;
+            display: none;
+            border: 1px solid #222;
+            margin-bottom: 20px;
+        }
+
+        video { width: 100%; height: 100%; object-fit: cover; }
+
+        .btn-world {
+            background-color: var(--text-main);
+            color: var(--bg-color);
+            border: none;
+            padding: 20px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: 700;
+            width: 100%;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .btn-world:active { transform: scale(0.96); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header-label">Verified Balance</div>
+        <div id="balance">0</div>
+        <div class="currency">Puntos WLD</div>
+
+        <div id="video-container">
+            <video id="videoAd" playsinline>
+                <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+            </video>
+        </div>
+
+        <button class="btn-world" id="btnVer" onclick="iniciarVideo()">Ver Video (+50)</button>
+    </div>
+
+    <script>
+        const _supabase = supabase.createClient('https://ztoscymfplscnyybzzij.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0b3NjeW1mcGxzY255eWJ6emlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc2NjE5OTksImV4cCI6MjA1MzIzNzk5OX0.eH0Ym_tGqP-v0H0r8X8X8X8X8X8X8X8X8X8X8X8X8X8');
+        const video = document.getElementById('videoAd');
+        const container = document.getElementById('video-container');
+        const btn = document.getElementById('btnVer');
+        let saldo = 0;
+
+        function iniciarVideo() {
+            container.style.display = 'block';
+            btn.style.display = 'none';
+            video.play();
+        }
+
+        video.onended = async () => {
+            const tg = window.Telegram.WebApp;
+            const userId = tg.initDataUnsafe?.user?.id || 999;
+
+            saldo += 50;
+            document.getElementById('balance').innerText = saldo;
+            container.style.display = 'none';
+            btn.style.display = 'block';
+
+            await _supabase.from('posts').upsert({ 
+                telegram_user_id: userId, 
+                total_points: saldo,
+                content: "Verified Human View"
+            });
+
+            tg.HapticFeedback.notificationOccurred('success');
+        };
+
+        window.Telegram.WebApp.ready();
+        window.Telegram.WebApp.expand();
+    </script>
+</body>
+</html>
