@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="es">
 <head>
@@ -23,18 +22,15 @@
 
     <div id="login-view" class="card">
         <div class="logo-circle">🌐</div>
-        <h2 style="margin:0;">Iniciar sesión</h2>
-        <p style="color: var(--gray); font-size: 15px; margin-top: 10px;">Verifícate para guardar tus puntos permanentemente.</p>
-        <button class="btn-main" onclick="conectarWorldID()">Iniciar sesión</button>
+        <h2>Iniciar sesión</h2>
+        <p style="color: var(--gray);">Toca el botón para conectar tu World ID.</p>
+        <button id="btnConnect" class="btn-main" onclick="conectarWorldID()">Iniciar sesión</button>
     </div>
 
     <div id="main-view" class="card" style="display:none;">
-        <p style="color: var(--gray); font-size: 12px; letter-spacing: 2px; font-weight: bold;">SALDO EN LA NUBE</p>
+        <p style="color: var(--gray); font-size: 12px; font-weight: bold;">PUNTOS ACTUALES</p>
         <div id="balance">0</div>
-        <p style="color: var(--green); font-weight: bold; margin-bottom: 25px;">WLD Puntos</p>
-        <div id="video-container">
-            <video id="videoAd" playsinline><source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4"></video>
-        </div>
+        <div id="video-container"><video id="videoAd" playsinline><source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4"></video></div>
         <button id="btnVer" class="btn-main" style="background: var(--blue); color: white;" onclick="verVideo()">📺 VER VIDEO (+50)</button>
     </div>
 
@@ -43,30 +39,33 @@
         let userHash = "";
         let saldo = 0;
 
+        // Inicializar IDKit inmediatamente
         async function conectarWorldID() {
+            const btn = document.getElementById('btnConnect');
+            btn.innerText = "Cargando...";
+            
             try {
-                // Lanza el modal oficial con los datos de tu portal
                 await IDKit.open({
                     app_id: "app_a91da31176bbbd6366544e13979839", 
-                    action: "login-para-puntos", 
-                    verification_level: "device", 
+                    action: "login-para-puntos",
+                    verification_level: "device", // Debe ser 'device' según tu captura 18:56
                     onSuccess: (res) => {
-                        userHash = res.nullifier_hash; // ID único para Supabase
+                        userHash = res.nullifier_hash; //
                         document.getElementById('login-view').style.display = 'none';
                         document.getElementById('main-view').style.display = 'block';
-                        cargarSaldoPrevio();
+                        cargarSaldo();
                     }
                 });
-            } catch (e) { console.error("Error de conexión:", e); }
+            } catch (e) {
+                console.error("Error al abrir IDKit:", e);
+                alert("Error: Asegúrate de tener World App instalada.");
+                btn.innerText = "Iniciar sesión";
+            }
         }
 
-        async function cargarSaldoPrevio() {
-            // Recupera los puntos si el usuario ya ha jugado antes
+        async function cargarSaldo() {
             const { data } = await _supabase.from('posts').select('total_points').eq('telegram_user_id', userHash).single();
-            if (data) {
-                saldo = data.total_points;
-                document.getElementById('balance').innerText = saldo;
-            }
+            if (data) { saldo = data.total_points; document.getElementById('balance').innerText = saldo; }
         }
 
         function verVideo() {
@@ -80,19 +79,12 @@
             document.getElementById('balance').innerText = saldo;
             document.getElementById('video-container').style.display = 'none';
             document.getElementById('btnVer').style.display = 'block';
-
-            // Guarda los puntos vinculados al humano real
-            await _supabase.from('posts').upsert({ 
-                telegram_user_id: userHash, 
-                total_points: saldo 
-            }, { onConflict: 'telegram_user_id' });
-            
-            window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
+            await _supabase.from('posts').upsert({ telegram_user_id: userHash, total_points: saldo }, { onConflict: 'telegram_user_id' });
+            window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
         };
 
         window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand();
     </script>
 </body>
 </html>
-ñ
+
