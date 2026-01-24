@@ -10,28 +10,11 @@
     
     <style>
         :root { --bg: #000; --white: #fff; --green: #00ff88; --gray: #888; }
-        body { 
-            background: var(--bg); color: var(--white); 
-            font-family: -apple-system, sans-serif; margin: 0; 
-            display: flex; align-items: center; justify-content: center; 
-            min-height: 100vh; text-align: center; 
-        }
-        .card { 
-            width: 90%; max-width: 380px; padding: 30px; 
-            border-radius: 30px; background: #111; 
-            border: 1px solid #222; box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .logo-circle { 
-            width: 60px; height: 60px; margin: 0 auto 20px; 
-            background: linear-gradient(135deg, #007aff, #00ff88); 
-            border-radius: 18px; display: flex; align-items: center; 
-            justify-content: center; font-size: 30px;
-        }
-        .btn-main { 
-            background: var(--white); color: var(--bg); border: none; 
-            padding: 18px; border-radius: 100px; font-size: 18px; 
-            font-weight: bold; width: 100%; cursor: pointer; margin-top: 25px;
-        }
+        body { background: var(--bg); color: var(--white); font-family: -apple-system, sans-serif; margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; text-align: center; }
+        .card { width: 90%; max-width: 380px; padding: 30px; border-radius: 30px; background: #111; border: 1px solid #222; box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        .logo-circle { width: 60px; height: 60px; margin: 0 auto 20px; background: linear-gradient(135deg, #007aff, #00ff88); border-radius: 18px; display: flex; align-items: center; justify-content: center; font-size: 30px; }
+        .btn-main { background: var(--white); color: var(--bg); border: none; padding: 18px; border-radius: 100px; font-size: 18px; font-weight: bold; width: 100%; cursor: pointer; margin-top: 25px; transition: 0.2s; }
+        .btn-main:active { transform: scale(0.98); }
         #balance { font-size: 75px; font-weight: bold; margin: 5px 0; }
         #video-container { width: 100%; border-radius: 20px; overflow: hidden; display: none; margin: 20px 0; border: 1px solid #333; }
         video { width: 100%; display: block; }
@@ -42,7 +25,7 @@
     <div id="login-view" class="card">
         <div class="logo-circle">🌐</div>
         <h2 style="margin:0;">Iniciar sesión</h2>
-        <p style="color: var(--gray); font-size: 15px; margin-top: 10px;">Firma para confirmar tu identidad y autenticarte.</p>
+        <p style="color: var(--gray); font-size: 15px; margin-top: 10px;">Firma para confirmar tu identidad y autenticarte en la App.</p>
         
         <div style="text-align: left; margin-top: 25px; background: #1a1a1a; padding: 15px; border-radius: 15px;">
             <div style="font-size: 14px; margin-bottom: 8px;">✅ <b>Billetera</b></div>
@@ -68,52 +51,17 @@
 
     <script>
         const _supabase = supabase.createClient('https://ztoscymfplscnyybzzij.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inp0b3NjeW1mcGxzY255eWJ6emlqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzc2NjE5OTksImV4cCI6MjA1MzIzNzk5OX0.eH0Ym_tGqP-v0H0r8X8X8X8X8X8X8X8X8X8X8X8X8X8');
-        
         let userHash = "";
         let saldo = 0;
 
         async function conectarWorldID() {
             try {
-                // Abre el modal oficial de World ID
+                // Lanza el proceso de verificación oficial
                 await IDKit.open({
-                    app_id: "app_a91da31176bbbd6366544e13979839", // Tu App ID
-                    action: "login-para-puntos", // Tu identifier
-                    verification_level: "device", // Nivel configurado en portal
+                    app_id: "app_a91da31176bbbd6366544e13979839", 
+                    action: "login-para-puntos", 
+                    verification_level: "device", // Nivel configurado en tu portal
                     onSuccess: (res) => {
-                        userHash = res.nullifier_hash; // Hash seguro del humano
+                        userHash = res.nullifier_hash; // ID único del humano
                         document.getElementById('login-view').style.display = 'none';
                         document.getElementById('main-view').style.display = 'block';
-                        window.Telegram.WebApp.HapticFeedback.notificationOccurred('success');
-                    }
-                });
-            } catch (e) {
-                console.error("Error al firmar:", e);
-            }
-        }
-
-        function verVideo() {
-            document.getElementById('video-container').style.display = 'block';
-            document.getElementById('btnVer').style.display = 'none';
-            document.getElementById('videoAd').play();
-        }
-
-        document.getElementById('videoAd').onended = async () => {
-            saldo += 50;
-            document.getElementById('balance').innerText = saldo;
-            document.getElementById('video-container').style.display = 'none';
-            document.getElementById('btnVer').style.display = 'block';
-
-            // Guarda en Supabase usando el hash único
-            await _supabase.from('posts').upsert({ 
-                telegram_user_id: userHash, 
-                total_points: saldo 
-            }, { onConflict: 'telegram_user_id' });
-            
-            window.Telegram.WebApp.HapticFeedback.impactOccurred('medium');
-        };
-
-        window.Telegram.WebApp.ready();
-        window.Telegram.WebApp.expand();
-    </script>
-</body>
-</html>
